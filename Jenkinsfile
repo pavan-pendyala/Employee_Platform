@@ -17,9 +17,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo '=== Building Docker image ==='
+                echo '=== Building Docker image with Docker Compose ==='
                 script {
-                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest .'
+                    sh 'docker-compose build app'
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
                 echo '=== Running health check ==='
                 script {
                     sh '''
-                        docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} python -c "
+                        docker-compose run --rm app python -c "
 from app.main import app
 from app.database import Base
 print('✓ FastAPI app imported successfully')
@@ -44,7 +44,7 @@ print('✓ Database models imported successfully')
             steps {
                 echo '=== Starting Docker services ==='
                 script {
-                    sh 'docker compose up -d'
+                    sh 'docker-compose up -d'
                 }
             }
         }
@@ -55,26 +55,9 @@ print('✓ Database models imported successfully')
                 script {
                     sh '''
                         echo "Waiting for app to be ready..."
-                        sleep 3
-                        curl -f http://localhost:8000/ || exit 1
+                        sleep 5
+                        docker-compose exec -T app curl -f http://localhost:8000/ || exit 1
                         echo "✓ App is healthy"
-                    '''
-                }
-            }
-        }
-
-        stage('Push to Registry (Optional)') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo '=== Pushing image to registry ==='
-                script {
-                    sh '''
-                        # Uncomment to push to Docker Hub
-                        # docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/your-username/${IMAGE_NAME}:${IMAGE_TAG}
-                        # docker push ${REGISTRY}/your-username/${IMAGE_NAME}:${IMAGE_TAG}
-                        echo "✓ Push step configured (uncomment to enable)"
                     '''
                 }
             }
