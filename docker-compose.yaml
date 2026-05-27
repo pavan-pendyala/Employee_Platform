@@ -57,12 +57,3 @@ services:
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
-  jenkins:
-    image: jenkins/jenkins
-    ports:
-      - "8081:8080"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-
-volumes:
-  jenkins_home:
